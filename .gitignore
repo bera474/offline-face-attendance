@@ -1,0 +1,103 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual environments
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+attendance.db
+
+# IDE and editors
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+*.sublime-project
+*.sublime-workspace
+.project
+.pydevproject
+.settings/
+.classpath
+
+# OS files
+Thumbs.db
+.DS_Store
+.AppleDouble
+.LSOverride
+*.lnk
+
+# Test and coverage
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.hypothesis/
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Temporary files
+*.tmp
+*.temp
+*.log
+*.pot
+
+# CSV and report files (optional - uncomment if you want to ignore)
+# *.csv
+# *.xlsx
+# attendance_report*
+
+# Model files (large files - uncomment if needed)
+# models/
+# *.onnx
+# *.pb
+# *.h5
+
+# Jupyter Notebook
+.ipynb_checkpoints
+*.ipynb
+
+# Misc
+.venv
+*.bak
+*.orig
+node_modules/
+package-lock.json
+
+# Project specific
+/attendance_data/
+/temp/
+/cache/
