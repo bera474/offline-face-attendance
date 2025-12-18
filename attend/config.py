@@ -10,7 +10,7 @@ class Config:
     DATASET_DIR: str = os.environ.get("ATTEND_DATASET", os.path.abspath("dataset"))
 
     # Recognition thresholds (cosine similarity)
-    SIM_THRESHOLD: float = float(os.environ.get("ATTEND_SIM_THRESHOLD", 0.60))
+    SIM_THRESHOLD: float = float(os.environ.get("ATTEND_SIM_THRESHOLD", 0.70))
     REARM_SECONDS: float = float(os.environ.get("ATTEND_REARM", 15))
 
     # Video

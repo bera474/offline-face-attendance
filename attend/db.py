@@ -73,6 +73,21 @@ def init_db(school_id: str = "", room: str = ""):
             print(f"[db] device_id={row[0]}")
     print(f"[db] Ready at {CFG.DB_PATH}")
 
+def get_latest_date(db_path):
+    """Return latest DATE present in attendance.ts, or None if empty."""
+    conn = sqlite3.connect(db_path)
+    cur = conn.cursor()
+    # Normalize ISO -> 'YYYY-MM-DD HH:MM:SS', then take DATE(...) and pick the max
+    cur.execute("""
+        SELECT DATE(REPLACE(REPLACE(ts, 'T', ' '), 'Z', '')) AS d
+        FROM attendance
+        WHERE ts IS NOT NULL
+        ORDER BY d DESC
+        LIMIT 1
+    """)
+    row = cur.fetchone()
+    conn.close()
+    return row[0] if row and row[0] else None
 
 def get_device_id(conn) -> str:
     return conn.execute("SELECT value FROM meta WHERE key='device_id'").fetchone()[0]
