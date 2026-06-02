@@ -29,3 +29,22 @@ def download_models(model_name: str = None):
     except Exception as e:
         print(f"[packs] Error: {e}")
         raise
+
+
+def download_antispoof_models():
+    """
+    Pre-download anti-spoof models for liveness detection.
+    """
+    if not HAS_INSIGHTFACE:
+        print("[packs] ⚠️  InsightFace not installed, cannot download anti-spoof models")
+        return
+
+    print("[packs] Ensuring anti-spoof models are available...")
+    try:
+        from insightface.app.face_antispoof import FaceAntiSpoof
+        antispoof = FaceAntiSpoof()
+        print("[packs] Anti-spoof models ready")
+    except ImportError:
+        print("[packs] ⚠️  Anti-spoof not available, will use default confidence 0.5")
+    except Exception as e:
+        print(f"[packs] Warning downloading anti-spoof: {e}")

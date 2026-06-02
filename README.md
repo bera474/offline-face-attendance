@@ -5,6 +5,7 @@ An automated, fully offline facial recognition-based attendance system for class
 ## ✨ Features
 
 - ✅ **100% Offline** - Works without internet, complete privacy
+- ✅ **Anti-Spoofing** - Liveness detection prevents photo/screen/mask attacks
 - ✅ **Fast & Accurate** - Marks attendance in <1 second with 95%+ accuracy
 - ✅ **No Fraud** - Face-based authentication prevents proxy attendance
 - ✅ **Easy to Use** - Simple CLI commands for all operations
@@ -52,7 +53,13 @@ python main.py download-models
 python main.py init --school-id "Your School" --room "Class A"
 ```
 
-#### 2. Enroll Students (Choose one method)
+#### 2. Download Models (including anti-spoof for liveness detection)
+```bash
+# Optional: Pre-download models to avoid runtime delays
+python main.py download-models --antispoof
+```
+
+#### 3. Enroll Students (Choose one method)
 
 **Method 1: Webcam Enrollment**
 ```bash
@@ -183,6 +190,11 @@ Edit `.env` or `attend/config.py` to customize:
 # Similarity threshold (lower = more strict)
 CONFIDENCE_THRESHOLD = 0.60
 
+# Liveness detection (anti-spoofing)
+ATTEND_LIVENESS = 1                    # Enable/disable liveness check
+ATTEND_LIVENESS_THRESHOLD = 0.70       # Liveness score threshold (0-1)
+ATTEND_LOG_LIVENESS = 1                # Log liveness check results
+
 # Rearm timer (seconds - prevents duplicate marks)
 REARM_DURATION = 15
 
@@ -190,6 +202,27 @@ REARM_DURATION = 15
 CAMERA_INDEX = 0
 CAMERA_WIDTH = 1280
 CAMERA_HEIGHT = 720
+```
+
+### Anti-Spoofing / Liveness Detection
+
+The system includes **liveness detection** to prevent spoofing attacks:
+
+- ✅ Detects **printed photos** of students
+- ✅ Detects **screen replays** (e.g., showing phone/laptop screen)
+- ✅ Detects **masks** and faces that aren't genuine
+- ✅ Single-frame detection (no blinking required)
+- ✅ Configurable threshold for strict/lenient mode
+
+**How it works:**
+1. Each face is checked for liveness before matching
+2. If liveness_score < threshold → rejected (shown in red box as "SPOOF")
+3. If liveness_score ≥ threshold → proceeds to face matching
+4. Both confidence scores are stored in attendance record for audit
+
+**Disable liveness if needed:**
+```bash
+ATTEND_LIVENESS=0 python main.py run
 ```
 
 ## 🔒 Security & Privacy

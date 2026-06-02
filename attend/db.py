@@ -38,6 +38,7 @@ CREATE TABLE IF NOT EXISTS attendance(
     ts TEXT,
     method TEXT,
     confidence REAL,
+    liveness_score REAL DEFAULT 0.0,
     synced INTEGER DEFAULT 0,
     FOREIGN KEY(student_id) REFERENCES students(id)
 );
@@ -71,7 +72,23 @@ def init_db(school_id: str = "", room: str = ""):
             print(f"[db] Created device_id={did}")
         else:
             print(f"[db] device_id={row[0]}")
+
+    # Run schema migrations
+    _migrate_schema(conn)
     print(f"[db] Ready at {CFG.DB_PATH}")
+
+
+def _migrate_schema(conn):
+    """Apply schema migrations for existing databases"""
+    try:
+        # Add liveness_score column if it doesn't exist
+        conn.execute("ALTER TABLE attendance ADD COLUMN liveness_score REAL DEFAULT 0.0;")
+        if CFG.LOG_MATCHES:
+            print("[db] Added liveness_score column to attendance table")
+    except sqlite3.OperationalError:
+        # Column already exists, that's fine
+        pass
+    conn.commit()
 
 def get_latest_date(db_path):
     """Return latest DATE present in attendance.ts, or None if empty."""

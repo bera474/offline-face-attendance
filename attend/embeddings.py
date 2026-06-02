@@ -16,7 +16,7 @@ class Embedder:
         self.model_name = model_name or CFG.MODEL_NAME
         self.det_size = det_size
         self.use_insightface = HAS_INSIGHTFACE
-        
+
         if self.use_insightface:
             try:
                 self.app = FaceAnalysis(name=self.model_name)
@@ -49,8 +49,10 @@ class Embedder:
             out = []
             for f in faces:
                 box = f.bbox.astype(int)
+                bbox = (box[0], box[1], box[2], box[3])
+
                 out.append({
-                    "bbox": (box[0], box[1], box[2], box[3]),
+                    "bbox": bbox,
                     "kps": f.kps,
                     "embedding": f.embedding.astype(np.float32),
                 })
@@ -63,18 +65,19 @@ class Embedder:
         """Fallback: Use OpenCV cascade with dummy embeddings"""
         gray = cv2.cvtColor(frame_bgr, cv2.COLOR_BGR2GRAY)
         faces = self.cascade.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=5, minSize=(30, 30))
-        
+
         out = []
         for (x, y, w, h) in faces:
+            bbox = (int(x), int(y), int(x+w), int(y+h))
+
             # Generate dummy embedding from face region
             face_roi = frame_bgr[y:y+h, x:x+w]
-            # Simple embedding: flatten and normalize RGB histogram
             embedding = self._generate_dummy_embedding(face_roi)
-            
+
             out.append({
-                "bbox": (int(x), int(y), int(x+w), int(y+h)),
-                "kps": np.array([[x+w/4, y+h/4], [x+3*w/4, y+h/4], 
-                               [x+w/2, y+h/2], [x+w/4, y+3*h/4], 
+                "bbox": bbox,
+                "kps": np.array([[x+w/4, y+h/4], [x+3*w/4, y+h/4],
+                               [x+w/2, y+h/2], [x+w/4, y+3*h/4],
                                [x+3*w/4, y+3*h/4]], dtype=np.float32),
                 "embedding": embedding,
             })

@@ -199,6 +199,25 @@ python main.py enroll --name "John Doe" --shots 12
 ### Problem: Person not recognized
 **Solution:** Same as above - enroll again with better lighting
 
+### Problem: Face marked as "SPOOF" (rejected during attendance)
+**Explanation:** The system detected the face is not live (likely a photo, screen, or mask)
+
+**Solution:**
+- Make sure the student is physically present (not showing a photo)
+- Ensure good lighting and face is clearly visible
+- Try moving closer to the camera
+- If you need to disable liveness detection temporarily:
+```bash
+ATTEND_LIVENESS=0 python main.py run
+```
+
+### Problem: Liveness detection too strict
+**Solution:** Lower the liveness threshold:
+```bash
+ATTEND_LIVENESS_THRESHOLD=0.50 python main.py run
+```
+(Lower = more lenient, Higher = more strict. Default is 0.70)
+
 ---
 
 ## File Locations

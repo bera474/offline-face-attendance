@@ -98,7 +98,7 @@ class AttendanceSystem:
                     bbox = face["bbox"]
                     embedding = face["embedding"]
 
-                    # Find best match
+                    # Proceed with matching
                     query_list = [(sid, name, vec) for sid, name, vec in self.enrolled_students]
                     if query_list:
                         best_id_tuple = best_match(embedding, query_list)

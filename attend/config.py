@@ -10,7 +10,7 @@ class Config:
     DATASET_DIR: str = os.environ.get("ATTEND_DATASET", os.path.abspath("dataset"))
 
     # Recognition thresholds (cosine similarity)
-    SIM_THRESHOLD: float = float(os.environ.get("ATTEND_SIM_THRESHOLD", 0.70))
+    SIM_THRESHOLD: float = float(os.environ.get("ATTEND_SIM_THRESHOLD", 0.80))
     REARM_SECONDS: float = float(os.environ.get("ATTEND_REARM", 15))
 
     # Video
@@ -23,6 +23,16 @@ class Config:
     WINDOW_NAME: str = "Smart Attendance (Offline)"
     SHOW_CONFIDENCE: bool = True
     LOG_MATCHES: bool = True
+
+    # Face Quality Thresholds (relaxed for low-light & low-quality cameras)
+    QUALITY_MIN_FACE_SIZE: float = float(os.environ.get("ATTEND_QUALITY_MIN_SIZE", "0.01"))
+    QUALITY_MIN_BLUR_SCORE: float = float(os.environ.get("ATTEND_QUALITY_MIN_BLUR", "20"))
+    QUALITY_MIN_BRIGHTNESS: float = float(os.environ.get("ATTEND_QUALITY_MIN_BRIGHT", "15"))
+    QUALITY_MAX_BRIGHTNESS: float = float(os.environ.get("ATTEND_QUALITY_MAX_BRIGHT", "245"))
+    QUALITY_MAX_YAW: float = float(os.environ.get("ATTEND_QUALITY_MAX_YAW", "40"))
+    QUALITY_MAX_PITCH: float = float(os.environ.get("ATTEND_QUALITY_MAX_PITCH", "40"))
+    QUALITY_MAX_ROLL: float = float(os.environ.get("ATTEND_QUALITY_MAX_ROLL", "30"))
+    QUALITY_ACCEPT_THRESHOLD: float = float(os.environ.get("ATTEND_QUALITY_THRESHOLD", "0.20"))
 
     # Packs
     PACK_MODEL_TAG: str = "insightface_512d"

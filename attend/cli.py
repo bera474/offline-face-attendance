@@ -31,6 +31,7 @@ def main():
     # Download models
     models_parser = subparsers.add_parser("download-models", help="Pre-download models")
     models_parser.add_argument("--model", default=None, help="Model name")
+    models_parser.add_argument("--antispoof", action="store_true", help="Download anti-spoof model")
 
     # Run attendance
     run_parser = subparsers.add_parser("run", help="Run attendance marking")
@@ -61,6 +62,9 @@ def main():
         enroll_from_dataset(args.dataset_dir)
     elif args.command == "download-models":
         download_models(model_name=args.model)
+        if args.antispoof:
+            from .packs import download_antispoof_models
+            download_antispoof_models()
     elif args.command == "run":
         from .app import run_attendance
         run_attendance(camera_index=args.device)

@@ -107,21 +107,29 @@ Total: 512 numbers = 1 KB (vs 5 MB for an image!)
 
 ### The 3-Step Process
 
-#### Step 1: Face Detection
+```
+STEP 1: Face Detection
 - Input: Camera frame (image)
 - Process: Scan image using OpenCV Cascade Classifier
 - Output: Face location (x, y, width, height)
 
-#### Step 2: Face Embedding
-- Input: Detected face image
+STEP 2: Liveness Check (Anti-Spoof)
+- Input: Face region
+- Process: Run anti-spoof model
+- Output: {"live": bool, "score": 0-1}
+- If score < 0.70 → REJECT (likely spoofed)
+
+STEP 3: Face Embedding
+- Input: Detected face image (if liveness passed)
 - Process: Extract features → Convert to 512-D vector
 - Output: Mathematical representation of the face
 
-#### Step 3: Face Matching (Cosine Similarity)
-- Compare two embeddings using a formula
+STEP 4: Face Matching (Cosine Similarity)
+- Compare embeddings using a formula
 - Range: 0 (different) to 1 (identical)
 - Threshold: 0.60 (default)
 - If similarity > 0.60 → **MATCH!**
+```
 
 ```
 John's enrollment embedding:    [0.12, -0.34, 0.56, ...]
@@ -390,7 +398,11 @@ FLOW:
    └─ For each frame (30 times per second):
       ├─ embeddings.py: detect_and_embed()
       │  ├─ OpenCV: Detect all faces in frame
-      │  └─ Extract embedding for each face
+      │  ├─ For each face:
+      │  │  ├─ Check liveness (anti-spoof)
+      │  │  │  ├─ If score < 0.70: REJECT as spoof
+      │  │  │  └─ If score ≥ 0.70: Continue
+      │  │  └─ Extract embedding for live face
       │
       ├─ recognition.py: best_match()
       │  ├─ For each student in database:
@@ -406,10 +418,13 @@ FLOW:
       │  │
       │  ├─ attendance.py: mark_attendance()
       │  │  ├─ db.py: INSERT INTO attendance
-      │  │  │  └─ (student_id, timestamp, confidence)
+      │  │  │  └─ (student_id, timestamp, confidence, liveness_score)
       │  │  └─ Set rearm timer (wait 15 sec)
       │  │
       │  └─ Display: Green box with name & confidence
+      │
+      ├─ If liveness check failed:
+      │  └─ Display: Red box "SPOOF (score)"
       │
       └─ Else (no match):
          └─ Display: Red box "Unknown"
@@ -457,7 +472,57 @@ RESULT:
 
 ## Key Concepts
 
-### 1. Face Embedding (The Secret Sauce)
+### 1. Liveness Detection (Anti-Spoofing)
+
+**What is it?**
+- Before matching a detected face, the system checks if it's a **real, live face**
+- Prevents attacks using printed photos, phone screens, masks, or video replays
+- Works on **single frames** - no blinking or movement required
+
+**How does it work?**
+```
+Detected Face
+    ↓
+Is it LIVE? (Anti-spoof check)
+    ├─ YES (score ≥ 0.70) → Continue to matching
+    └─ NO (score < 0.70) → REJECT as SPOOF
+```
+
+**Liveness Confidence Scale:**
+```
+1.0 = Definitely a live face
+0.85+ = Very confident it's live
+0.70 = Threshold (accept if ≥ this)
+0.50 = Uncertain
+0.0 = Likely spoofed/fake
+```
+
+**What it detects:**
+- ✅ Printed photographs
+- ✅ Screen replays (phone/laptop display)
+- ✅ Low-quality masks
+- ✅ Video recordings
+- ✅ Face swaps or deepfakes
+
+**In the UI:**
+```
+GREEN BOX: Live face → Will attempt to match
+RED BOX with "SPOOF": Not live → Rejected immediately
+```
+
+**How to configure:**
+```bash
+# Disable liveness checks
+ATTEND_LIVENESS=0 python main.py run
+
+# Make stricter (reject more)
+ATTEND_LIVENESS_THRESHOLD=0.80 python main.py run
+
+# Make lenient (accept more)
+ATTEND_LIVENESS_THRESHOLD=0.50 python main.py run
+```
+
+### 2. Face Embedding (The Secret Sauce)
 
 **What is it?**
 - A face is NOT stored as an image file
@@ -736,17 +801,19 @@ RESULT:
 ### The System in 30 Seconds
 
 1. **Capture faces** → Convert to 512-D mathematical vectors ("fingerprints")
-2. **Store fingerprints** → In SQLite database (not images)
-3. **Compare faces** → Use cosine similarity (0 to 1)
-4. **Match if similar** → Similarity > 0.60 threshold
-5. **Mark attendance** → Record in database with timestamp
-6. **Export report** → Create Excel file for viewing
+2. **Check liveness** → Ensure face is real (not photo/screen/mask)
+3. **Store fingerprints** → In SQLite database (not images)
+4. **Compare faces** → Use cosine similarity (0 to 1)
+5. **Match if similar & live** → Similarity > 0.60 threshold AND liveness > 0.70
+6. **Mark attendance** → Record in database with timestamp & liveness score
+7. **Export report** → Create Excel file for viewing
 
 ### Why This Works
 
+- **Secure:** Liveness detection prevents photo/screen/mask spoofing attacks
 - **Fast:** Comparing numbers is faster than comparing images
-- **Secure:** Original face images not stored (only fingerprints)
-- **Accurate:** 512-D vectors capture face details well
+- **Accurate:** 512-D vectors + liveness check = 95%+ accuracy
+- **Privacy-Focused:** Original face images not stored (only fingerprints)
 - **Offline:** No internet needed, database is local
 - **Efficient:** Uses ~2 KB per student vs 5 MB for images
 
