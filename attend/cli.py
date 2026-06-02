@@ -21,12 +21,16 @@ def main():
     enroll_cam_parser = subparsers.add_parser("enroll", help="Enroll student via webcam")
     enroll_cam_parser.add_argument("--name", default=None, help="Student name")
     enroll_cam_parser.add_argument("--id", default=None, help="Student ID")
+    enroll_cam_parser.add_argument("--class", dest="class_name", default=None, help="Student class (e.g. '10A')")
+    enroll_cam_parser.add_argument("--roll", default=None, help="Student roll number")
     enroll_cam_parser.add_argument("--shots", type=int, default=8, help="Number of face captures")
     enroll_cam_parser.add_argument("--device", type=int, default=0, help="Camera device index")
 
     # Enroll from dataset
     enroll_dataset_parser = subparsers.add_parser("enroll-dataset", help="Enroll from dataset directory")
     enroll_dataset_parser.add_argument("dataset_dir", help="Dataset directory path")
+    enroll_dataset_parser.add_argument("--class", dest="class_name", default=None, help="Class for all students in dataset")
+    enroll_dataset_parser.add_argument("--roll", default=None, help="Roll number (only useful for single-student dataset)")
 
     # Download models
     models_parser = subparsers.add_parser("download-models", help="Pre-download models")
@@ -62,9 +66,11 @@ def main():
             name=args.name,
             device=args.device,
             n_shots=args.shots,
+            class_name=args.class_name,
+            roll=args.roll,
         )
     elif args.command == "enroll-dataset":
-        enroll_from_dataset(args.dataset_dir)
+        enroll_from_dataset(args.dataset_dir, class_name=args.class_name, roll=args.roll)
     elif args.command == "download-models":
         download_models(model_name=args.model)
         if args.antispoof:

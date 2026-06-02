@@ -140,7 +140,6 @@ def create_excel_file(db_path, output_file="attendance_report.xlsx", date=None):
         print("⚠️  openpyxl not installed. Use --csv instead.")
         return False
 
-    data = get_attendance_data(db_path, date)
     summary = get_summary_data(db_path, date)
 
     if date is None:
@@ -149,52 +148,15 @@ def create_excel_file(db_path, output_file="attendance_report.xlsx", date=None):
     wb = Workbook()
     wb.remove(wb.active)
 
-    # Sheet 1
-    ws1 = wb.create_sheet("Detailed Attendance", 0)
-    ws1['A1'] = f"Detailed Attendance - {date}"
-    ws1['A1'].font = Font(bold=True, size=14)
-    ws1.merge_cells('A1:E1')
+    # Daily Summary sheet
+    ws = wb.create_sheet("Daily Summary", 0)
+    ws['A1'] = f"Daily Summary - {date}"
+    ws['A1'].font = Font(bold=True, size=14)
+    ws.merge_cells('A1:E1')
 
-    headers = ['Student Name', 'Roll No', 'Class', 'Time', 'Confidence']
+    headers = ['Student Name', 'Roll No', 'Class', 'Status', 'Avg Confidence']
     for i, h in enumerate(headers, 1):
-        c = ws1.cell(row=3, column=i)
-        c.value = h
-        c.font = Font(bold=True, color="FFFFFF")
-        c.fill = PatternFill(start_color="4472C4", end_color="4472C4", fill_type="solid")
-        c.alignment = Alignment(horizontal="center", vertical="center")
-
-    for r, (name, ts, conf, roll, cls) in enumerate(data, 4):
-        ws1.cell(row=r, column=1).value = name
-        ws1.cell(row=r, column=2).value = roll or "-"
-        ws1.cell(row=r, column=3).value = cls or "-"
-        ws1.cell(row=r, column=4).value = ts
-        ws1.cell(row=r, column=5).value = conf
-        ws1.cell(row=r, column=5).alignment = Alignment(horizontal="center")
-        if r % 2 == 0:
-            for col in range(1, 6):
-                ws1.cell(row=r, column=col).fill = PatternFill(start_color="E7E6E6", end_color="E7E6E6", fill_type="solid")
-
-    ws1.column_dimensions['A'].width = 25
-    ws1.column_dimensions['B'].width = 15
-    ws1.column_dimensions['C'].width = 15
-    ws1.column_dimensions['D'].width = 26
-    ws1.column_dimensions['E'].width = 12
-
-    if data:
-        stats_row = len(data) + 5
-        ws1[f'A{stats_row}'] = "Total Records:"
-        ws1[f'B{stats_row}'] = len(data)
-        ws1[f'A{stats_row}'].font = Font(bold=True)
-
-    # Sheet 2
-    ws2 = wb.create_sheet("Daily Summary", 1)
-    ws2['A1'] = f"Daily Summary - {date}"
-    ws2['A1'].font = Font(bold=True, size=14)
-    ws2.merge_cells('A1:F1')
-
-    headers2 = ['Student Name', 'Roll No', 'Class', 'Status', 'Marks', 'Avg Confidence']
-    for i, h in enumerate(headers2, 1):
-        c = ws2.cell(row=3, column=i)
+        c = ws.cell(row=3, column=i)
         c.value = h
         c.font = Font(bold=True, color="FFFFFF")
         c.fill = PatternFill(start_color="70AD47", end_color="70AD47", fill_type="solid")
@@ -202,64 +164,69 @@ def create_excel_file(db_path, output_file="attendance_report.xlsx", date=None):
 
     present = 0
     for r, (sid, name, roll, cls, marks, avg_conf) in enumerate(summary, 4):
-        ws2.cell(row=r, column=1).value = name
-        ws2.cell(row=r, column=2).value = roll or "-"
-        ws2.cell(row=r, column=3).value = cls or "-"
+        ws.cell(row=r, column=1).value = name
+        ws.cell(row=r, column=2).value = roll or "-"
+        ws.cell(row=r, column=3).value = cls or "-"
         status = "✓ Present" if marks and marks > 0 else "✗ Absent"
         if marks and marks > 0: present += 1
-        ws2.cell(row=r, column=4).value = status
-        ws2.cell(row=r, column=5).value = marks or 0
-        ws2.cell(row=r, column=6).value = avg_conf or 0
-        for col in [4, 5, 6]:
-            ws2.cell(row=r, column=col).alignment = Alignment(horizontal="center")
+        ws.cell(row=r, column=4).value = status
+        ws.cell(row=r, column=5).value = avg_conf or 0
+        for col in [4, 5]:
+            ws.cell(row=r, column=col).alignment = Alignment(horizontal="center")
         if status.startswith("✓"):
-            ws2.cell(row=r, column=4).fill = PatternFill(start_color="C6EFCE", end_color="C6EFCE", fill_type="solid")
+            ws.cell(row=r, column=4).fill = PatternFill(start_color="C6EFCE", end_color="C6EFCE", fill_type="solid")
         else:
-            ws2.cell(row=r, column=4).fill = PatternFill(start_color="FFC7CE", end_color="FFC7CE", fill_type="solid")
+            ws.cell(row=r, column=4).fill = PatternFill(start_color="FFC7CE", end_color="FFC7CE", fill_type="solid")
         if r % 2 == 0:
-            for col in range(1, 7):
+            for col in range(1, 6):
                 if col != 4:
-                    ws2.cell(row=r, column=col).fill = PatternFill(start_color="E7E6E6", end_color="E7E6E6", fill_type="solid")
+                    ws.cell(row=r, column=col).fill = PatternFill(start_color="E7E6E6", end_color="E7E6E6", fill_type="solid")
 
-    ws2.column_dimensions['A'].width = 25
-    ws2.column_dimensions['B'].width = 15
-    ws2.column_dimensions['C'].width = 15
-    ws2.column_dimensions['D'].width = 15
-    ws2.column_dimensions['E'].width = 12
-    ws2.column_dimensions['F'].width = 15
+    ws.column_dimensions['A'].width = 25
+    ws.column_dimensions['B'].width = 15
+    ws.column_dimensions['C'].width = 15
+    ws.column_dimensions['D'].width = 15
+    ws.column_dimensions['E'].width = 15
 
     total = len(summary)
     absent = total - present
     stats_row = total + 5
-    ws2[f'A{stats_row}'] = "Summary:"
-    ws2[f'A{stats_row}'].font = Font(bold=True)
-    ws2[f'A{stats_row + 1}'] = "Total Students:"
-    ws2[f'B{stats_row + 1}'] = total
-    ws2[f'A{stats_row + 2}'] = "Present:"
-    ws2[f'B{stats_row + 2}'] = present
-    ws2[f'B{stats_row + 2}'].fill = PatternFill(start_color="C6EFCE", end_color="C6EFCE", fill_type="solid")
-    ws2[f'A{stats_row + 3}'] = "Absent:"
-    ws2[f'B{stats_row + 3}'] = absent
-    ws2[f'B{stats_row + 3}'].fill = PatternFill(start_color="FFC7CE", end_color="FFC7CE", fill_type="solid")
+    ws[f'A{stats_row}'] = "Summary:"
+    ws[f'A{stats_row}'].font = Font(bold=True)
+    ws[f'A{stats_row + 1}'] = "Total Students:"
+    ws[f'B{stats_row + 1}'] = total
+    ws[f'A{stats_row + 2}'] = "Present:"
+    ws[f'B{stats_row + 2}'] = present
+    ws[f'B{stats_row + 2}'].fill = PatternFill(start_color="C6EFCE", end_color="C6EFCE", fill_type="solid")
+    ws[f'A{stats_row + 3}'] = "Absent:"
+    ws[f'B{stats_row + 3}'] = absent
+    ws[f'B{stats_row + 3}'].fill = PatternFill(start_color="FFC7CE", end_color="FFC7CE", fill_type="solid")
 
     wb.save(output_file)
     return True
 
 
 def create_csv_file(db_path, output_file="attendance_report.csv", date=None):
-    data = get_attendance_data(db_path, date)
+    summary = get_summary_data(db_path, date)
     if date is None:
         date = datetime.now().strftime("%Y-%m-%d")
 
+    present = 0
     with open(output_file, 'w', newline='') as f:
         w = csv.writer(f)
-        w.writerow(['Attendance Report', date])
+        w.writerow(['Daily Summary', date])
         w.writerow([])
-        w.writerow(['Student Name', 'Roll No', 'Class', 'Time', 'Confidence'])
-        for name, ts, conf, roll, cls in data:
-            w.writerow([name, roll or '-', cls or '-', ts, conf])
+        w.writerow(['Student Name', 'Roll No', 'Class', 'Status', 'Avg Confidence'])
+        for sid, name, roll, cls, marks, avg_conf in summary:
+            status = 'Present' if marks and marks > 0 else 'Absent'
+            if marks and marks > 0: present += 1
+            w.writerow([name, roll or '-', cls or '-', status, avg_conf or 0])
         w.writerow([])
-        w.writerow(['Total Records:', len(data)])
+        total = len(summary)
+        absent = total - present
+        w.writerow(['Total Students:', total])
+        w.writerow(['Present:', present])
+        w.writerow(['Absent:', absent])
     return True
 
 
@@ -285,18 +252,18 @@ def print_table(db_path, date=None):
     print(f"DAILY SUMMARY - {date}".center(100))
     print("=" * 100)
     if summary:
-        print(f"\n{'Student Name':<25} {'Roll':<15} {'Class':<15} {'Status':<15} {'Marks':<10} {'Avg Confidence':<10}")
-        print("-" * 100)
+        print(f"\n{'Student Name':<25} {'Roll':<15} {'Class':<15} {'Status':<15} {'Avg Confidence':<10}")
+        print("-" * 85)
         present = 0
         for sid, name, roll, cls, marks, avg_conf in summary:
             status = "✓ Present" if marks and marks > 0 else "✗ Absent"
             if marks and marks > 0: present += 1
-            print(f"{name:<25} {str(roll):<15} {str(cls):<15} {status:<15} {str(marks):<10} {str(avg_conf):<10}")
+            print(f"{name:<25} {str(roll):<15} {str(cls):<15} {status:<15} {str(avg_conf):<10}")
         total = len(summary)
         absent = total - present
-        print("\n" + "-" * 100)
+        print("\n" + "-" * 85)
         print(f"Total Students: {total} | Present: {present} | Absent: {absent}")
-        print("=" * 100 + "\n")
+        print("=" * 85 + "\n")
     else:
         print("\n❌ No students found in database.\n")
 

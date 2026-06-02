@@ -12,7 +12,7 @@ from .quality import overall_quality_score
 MODEL_TAG = CFG.PACK_MODEL_TAG
 
 
-def enroll_from_dataset(dataset_dir: str):
+def enroll_from_dataset(dataset_dir: str, class_name: str | None = None, roll: str | None = None):
     """
     Enroll students from a dataset directory with structure:
     dataset_dir/
@@ -70,6 +70,19 @@ def enroll_from_dataset(dataset_dir: str):
             if existing:
                 sid = existing[0]
                 conn.execute("DELETE FROM embeddings WHERE student_id = ?", (sid,))
+                # Update class/roll if provided
+                if class_name is not None or roll is not None:
+                    updates, params = [], []
+                    if class_name is not None:
+                        updates.append("class = ?")
+                        params.append(class_name)
+                    if roll is not None:
+                        updates.append("roll = ?")
+                        params.append(roll)
+                    updates.append("updated_at = ?")
+                    params.append(now)
+                    params.append(sid)
+                    conn.execute(f"UPDATE students SET {', '.join(updates)} WHERE id = ?", params)
                 conn.execute(
                     """
                     INSERT INTO embeddings(id, student_id, model, quality, vec, created_at)
@@ -82,10 +95,10 @@ def enroll_from_dataset(dataset_dir: str):
                 sid = str(uuid.uuid4())
                 conn.execute(
                     """
-                    INSERT INTO students(id, name, status, updated_at)
-                    VALUES(?, ?, 'active', ?)
+                    INSERT INTO students(id, name, class, roll, status, updated_at)
+                    VALUES(?, ?, ?, ?, 'active', ?)
                     """,
-                    (sid, name, now),
+                    (sid, name, class_name, roll, now),
                 )
                 conn.execute(
                     """
@@ -100,7 +113,7 @@ def enroll_from_dataset(dataset_dir: str):
     conn.close()
 
 
-def enroll_from_webcam(student_id: str | None = None, name: str | None = None, device: int = 0, n_shots: int = 8):
+def enroll_from_webcam(student_id: str | None = None, name: str | None = None, device: int = 0, n_shots: int = 8, class_name: str | None = None, roll: str | None = None):
     """
     Enroll a student via webcam with quality validation.
     Press SPACE to capture, ESC to finish.
@@ -247,6 +260,19 @@ def enroll_from_webcam(student_id: str | None = None, name: str | None = None, d
         if existing:
             existing_id = existing[0]
             conn.execute("DELETE FROM embeddings WHERE student_id = ?", (existing_id,))
+            # Update class/roll if provided
+            if class_name is not None or roll is not None:
+                updates, params = [], []
+                if class_name is not None:
+                    updates.append("class = ?")
+                    params.append(class_name)
+                if roll is not None:
+                    updates.append("roll = ?")
+                    params.append(roll)
+                updates.append("updated_at = ?")
+                params.append(now)
+                params.append(existing_id)
+                conn.execute(f"UPDATE students SET {', '.join(updates)} WHERE id = ?", params)
             conn.execute(
                 """
                 INSERT INTO embeddings(id, student_id, model, quality, vec, created_at)
@@ -258,10 +284,10 @@ def enroll_from_webcam(student_id: str | None = None, name: str | None = None, d
         else:
             conn.execute(
                 """
-                INSERT INTO students(id, name, status, updated_at)
-                VALUES(?, ?, 'active', ?)
+                INSERT INTO students(id, name, class, roll, status, updated_at)
+                VALUES(?, ?, ?, ?, 'active', ?)
                 """,
-                (sid, nm, now),
+                (sid, nm, class_name, roll, now),
             )
             conn.execute(
                 """
