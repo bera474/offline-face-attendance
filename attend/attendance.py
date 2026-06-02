@@ -58,3 +58,23 @@ def get_student_count_today(device_id: str | None = None) -> int:
     count = conn.execute(query, params).fetchone()[0]
     conn.close()
     return count
+
+
+def delete_attendance_by_date(date: str) -> int:
+    """
+    Delete all attendance records for a specific date (YYYY-MM-DD).
+
+    Args:
+        date: Date string in YYYY-MM-DD format
+
+    Returns:
+        Number of records deleted
+    """
+    conn = connect()
+    with conn:
+        deleted = conn.execute(
+            "DELETE FROM attendance WHERE ts LIKE ?",
+            (f"{date}%",),
+        ).rowcount
+    conn.close()
+    return deleted

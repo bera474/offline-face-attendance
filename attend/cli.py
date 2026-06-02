@@ -47,6 +47,11 @@ def main():
     delete_parser = subparsers.add_parser("delete", help="Delete a student")
     delete_parser.add_argument("--name", required=True, help="Student name to delete")
 
+    # Delete attendance for a date
+    del_att_parser = subparsers.add_parser("delete-attendance", help="Delete attendance records for a date")
+    del_att_parser.add_argument("--date", default=None, help="Date in YYYY-MM-DD format (default: today)")
+    del_att_parser.add_argument("--yes", "-y", action="store_true", help="Skip confirmation prompt")
+
     args = parser.parse_args()
 
     if args.command == "init":
@@ -76,6 +81,24 @@ def main():
         )
     elif args.command == "delete":
         delete_student(name=args.name)
+    elif args.command == "delete-attendance":
+        from datetime import datetime
+        from .attendance import delete_attendance_by_date
+        date = args.date or datetime.now().strftime("%Y-%m-%d")
+        # Validate date format
+        try:
+            datetime.strptime(date, "%Y-%m-%d")
+        except ValueError:
+            print("❌ Invalid date format. Use YYYY-MM-DD")
+            sys.exit(1)
+        # Confirmation
+        if not args.yes:
+            confirm = input(f"⚠️  Delete ALL attendance records for {date}? (y/N): ")
+            if confirm.lower() not in ("y", "yes"):
+                print("Cancelled.")
+                return
+        deleted = delete_attendance_by_date(date)
+        print(f"✅ Deleted {deleted} attendance record(s) for {date}")
     else:
         parser.print_help()
 

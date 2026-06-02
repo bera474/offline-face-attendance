@@ -11,8 +11,9 @@
 2. **Enroll Students** - Add students and capture their face
 3. **Update Photo** - Change a student's face image
 4. **Delete Student** - Remove a student from system
-5. **Mark Attendance** - Students come, system recognizes and marks present
-6. **View Attendance** - See who came today and export to Excel
+5. **Delete Attendance** - Remove attendance records for a specific date
+6. **Mark Attendance** - Students come, system recognizes and marks present
+7. **View Attendance** - See who came today and export to Excel
 
 ---
 
@@ -102,7 +103,37 @@ python main.py delete --name "John Doe"
 
 ---
 
-### 5️⃣ Mark Attendance (Live)
+### 5️⃣ Delete Attendance for a Date
+```bash
+python main.py delete-attendance --date 2026-06-02
+```
+
+**What it does:**
+- Deletes ALL attendance records for the given date
+- Asks for confirmation before deleting
+- Shows how many records were deleted
+
+**Options:**
+- `--date YYYY-MM-DD` — Date to delete (defaults to today if not given)
+- `--yes` or `-y` — Skip the confirmation prompt
+
+**Examples:**
+```bash
+# Delete today's attendance
+python main.py delete-attendance
+
+# Delete a specific date
+python main.py delete-attendance --date 2025-12-13
+
+# Delete without confirmation
+python main.py delete-attendance --date 2025-12-13 --yes
+```
+
+**Use when:** Attendance was marked by mistake or you need to redo a day
+
+---
+
+### 6️⃣ Mark Attendance (Live)
 ```bash
 python main.py run
 ```
@@ -119,7 +150,7 @@ python main.py run
 
 ---
 
-### 6️⃣ View Attendance
+### 7️⃣ View Attendance
 ```bash
 python view_attendance.py
 ```
@@ -152,6 +183,9 @@ python main.py update --name "Student Name"
 
 # Delete student
 python main.py delete --name "Student Name"
+
+# Delete attendance for a date
+python main.py delete-attendance --date 2026-06-02
 
 # Mark attendance (run during class)
 python main.py run
@@ -230,14 +264,15 @@ ATTEND_LIVENESS_THRESHOLD=0.50 python main.py run
 
 ## Summary
 
-**6 Simple Steps:**
+**7 Simple Steps:**
 
 1. **Setup** → `python main.py init --school-id "School" --room "Room"`
 2. **Enroll** → `python main.py enroll --name "Student Name"`
 3. **Update Photo** → `python main.py update --name "Student Name"` (if needed)
-4. **Delete** → `python main.py delete --name "Student Name"` (if needed)
-5. **Mark** → `python main.py run`
-6. **View** → `python view_attendance.py --excel`
+4. **Delete Student** → `python main.py delete --name "Student Name"` (if needed)
+5. **Delete Attendance** → `python main.py delete-attendance --date YYYY-MM-DD` (if needed)
+6. **Mark** → `python main.py run`
+7. **View** → `python view_attendance.py --excel`
 
 That's it! ���
 
