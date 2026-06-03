@@ -25,7 +25,7 @@
 
 ### Step 2: Go to Project Folder
 ```bash
-cd offline_attendance
+cd offline-face-attendance
 ```
 
 ### Step 3: Install Requirements
@@ -33,7 +33,13 @@ cd offline_attendance
 pip install -r requirements.txt
 ```
 
-Done! ✅
+### Step 4: Pre-download Models (Crucial for Offline Setup)
+Before disconnecting from the internet, run the download command to fetch the face detection and anti-spoof models:
+```bash
+python main.py download-models --antispoof
+```
+
+Done! System is ready for fully offline use. ✅
 
 ---
 
@@ -59,16 +65,18 @@ python main.py enroll --name "John Doe"
 ```
 
 **Steps:**
-1. Command opens webcam
-2. **Press SPACE** to capture face (8 times)
-3. **Press ESC** when done
-4. System saves student face
-5. Repeat for each student
+1. Command opens webcam.
+2. The system checks face quality (size, blur, lighting, and head rotation) in real-time.
+   * **Orange Box**: Face is low quality. Look at the on-screen messages (e.g., "Face too blurry, hold still", "Too dark", or "Head rotated") and adjust.
+   * **Green Box**: Face quality is good. **Press SPACE** to capture a snapshot.
+3. Capture **8 shots** from different angles (look straight, slightly left, slightly right, tilt up/down) to ensure high recognition accuracy.
+4. **Press ESC** when done (or wait for 8 shots to finish).
+5. The system calculates and registers the averaged face signature in the database.
 
 **Good tips:**
-- Good lighting (near window)
-- Face centered in camera
-- Different angles (left, right, straight)
+- Good lighting (facing a light source or window) is highly recommended.
+- Avoid extreme angles or heavy shadows on the face.
+- Remove caps or dark glasses during enrollment.
 
 ---
 
@@ -150,22 +158,36 @@ python main.py run
 
 ---
 
-### 7️⃣ View Attendance
+### 7️⃣ View & Export Attendance
 ```bash
 python view_attendance.py
 ```
 
 **Shows:**
-- All students marked today
-- Time and confidence score
-- Summary (Present/Absent)
+- Detailed list of students marked on the latest date in the database.
+- Marks timestamp, roll number, class, and recognition confidence score.
+- A summary table counting total registered students, present students, and absent students.
 
-**Create Excel File:**
+**Advanced Options:**
 ```bash
+# Export to Excel (generates formatted report with color coding)
 python view_attendance.py --excel
-```
 
-Creates: `attendance_report.xlsx` - Open in Excel/Google Sheets
+# Export to CSV (flat spreadsheet)
+python view_attendance.py --csv
+
+# Create both Excel and CSV
+python view_attendance.py --all
+
+# View attendance for a specific date
+python view_attendance.py --date 2026-06-03
+
+# Filter details by student name
+python view_attendance.py --name "John"
+
+# Output report to custom filename
+python view_attendance.py --excel --output my_custom_report
+```
 
 ---
 
@@ -248,9 +270,16 @@ ATTEND_LIVENESS=0 python main.py run
 ### Problem: Liveness detection too strict
 **Solution:** Lower the liveness threshold:
 ```bash
-ATTEND_LIVENESS_THRESHOLD=0.50 python main.py run
+# On Windows PowerShell:
+$env:ATTEND_LIVENESS_THRESHOLD="0.60"; python main.py run
+
+# On Windows Command Prompt:
+set ATTEND_LIVENESS_THRESHOLD=0.60 && python main.py run
+
+# On Linux/macOS:
+ATTEND_LIVENESS_THRESHOLD=0.60 python main.py run
 ```
-(Lower = more lenient, Higher = more strict. Default is 0.70)
+(Lower = more lenient, Higher = more strict. Default is 0.80)
 
 ---
 

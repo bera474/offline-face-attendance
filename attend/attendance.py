@@ -4,7 +4,7 @@ from .db import connect
 from .utils import now_utc_iso
 
 
-def mark_attendance(student_id: str, device_id: str, method: str = "face", confidence: float = 0.0):
+def mark_attendance(student_id: str, device_id: str, method: str = "face", confidence: float = 0.0, liveness_score: float = 0.0):
     """
     Mark attendance for a student.
     """
@@ -13,10 +13,10 @@ def mark_attendance(student_id: str, device_id: str, method: str = "face", confi
     with conn:
         conn.execute(
             """
-            INSERT INTO attendance(id, student_id, device_id, ts, method, confidence, synced)
-            VALUES(?, ?, ?, ?, ?, ?, 0)
+            INSERT INTO attendance(id, student_id, device_id, ts, method, confidence, liveness_score, synced)
+            VALUES(?, ?, ?, ?, ?, ?, ?, 0)
             """,
-            (str(uuid.uuid4()), student_id, device_id, now, method, confidence),
+            (str(uuid.uuid4()), student_id, device_id, now, method, confidence, liveness_score),
         )
     conn.close()
 

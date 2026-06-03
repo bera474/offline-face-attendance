@@ -74,8 +74,8 @@ def main():
     elif args.command == "download-models":
         download_models(model_name=args.model)
         if args.antispoof:
-            from .packs import download_antispoof_models
-            download_antispoof_models()
+            from .packs import download_antispoof_model
+            download_antispoof_model()
     elif args.command == "run":
         from .app import run_attendance
         run_attendance(camera_index=args.device)

@@ -80,7 +80,7 @@ This system marks student attendance using **facial recognition** and works **co
          │                                              │
          │  • Compare embeddings                       │
          │  • Use cosine similarity (0 to 1)          │
-         │  • If > 0.60 threshold → MATCH             │
+         │  • If > 0.80 threshold → MATCH             │
          └──────────────────────────────────────────────┘
 ```
 
@@ -117,7 +117,7 @@ STEP 2: Liveness Check (Anti-Spoof)
 - Input: Face region
 - Process: Run anti-spoof model
 - Output: {"live": bool, "score": 0-1}
-- If score < 0.70 → REJECT (likely spoofed)
+- If score < 0.80 → REJECT (likely spoofed)
 
 STEP 3: Face Embedding
 - Input: Detected face image (if liveness passed)
@@ -127,8 +127,8 @@ STEP 3: Face Embedding
 STEP 4: Face Matching (Cosine Similarity)
 - Compare embeddings using a formula
 - Range: 0 (different) to 1 (identical)
-- Threshold: 0.60 (default)
-- If similarity > 0.60 → **MATCH!**
+- Threshold: 0.80 (default)
+- If similarity > 0.80 → **MATCH!**
 ```
 
 ```
@@ -191,7 +191,7 @@ offline_attendance/
    │                           └─ Release resources
    │
    ├─ config.py                ← CONFIGURATION SETTINGS
-   │                           ├─ Thresholds (0.60 similarity)
+   │                           ├─ Thresholds (0.80 similarity)
    │                           ├─ Rearm timer (15 seconds)
    │                           └─ Camera settings (1280x720)
    │
@@ -272,7 +272,7 @@ Image → Detect face → Extract features → 512-D vector
 # For each enrolled student
 for student in students:
     similarity = cosine_similarity(detected_face, student_face)
-    if similarity > 0.60:
+    if similarity > 0.80:
         return student  # Found match!
 return None  # Unknown person
 ```
@@ -320,7 +320,7 @@ devices:
 **Settings:**
 ```
 ATTEND_DB = "attendance.db"           # Database file
-ATTEND_SIM_THRESHOLD = 0.60           # Match threshold
+ATTEND_SIM_THRESHOLD = 0.80           # Match threshold (0.80 default)
 ATTEND_REARM = 15                     # Duplicate prevention (seconds)
 ATTEND_CAM = 0                        # Camera device index
 ATTEND_WIDTH = 1280                   # Video width
@@ -400,14 +400,14 @@ FLOW:
       │  ├─ OpenCV: Detect all faces in frame
       │  ├─ For each face:
       │  │  ├─ Check liveness (anti-spoof)
-      │  │  │  ├─ If score < 0.70: REJECT as spoof
-      │  │  │  └─ If score ≥ 0.70: Continue
+      │  │  │  ├─ If score < 0.80: REJECT as spoof
+      │  │  │  └─ If score ≥ 0.80: Continue
       │  │  └─ Extract embedding for live face
       │
       ├─ recognition.py: best_match()
       │  ├─ For each student in database:
       │  │  ├─ Calculate similarity with detected face
-      │  │  └─ If > 0.60 threshold: potential match
+      │  │  └─ If > 0.80 threshold: potential match
       │  ├─ Find best match (highest similarity)
       │  └─ Return: (student_name, confidence)
       │
@@ -484,15 +484,15 @@ RESULT:
 Detected Face
     ↓
 Is it LIVE? (Anti-spoof check)
-    ├─ YES (score ≥ 0.70) → Continue to matching
-    └─ NO (score < 0.70) → REJECT as SPOOF
+    ├─ YES (score ≥ 0.80) → Continue to matching
+    └─ NO (score < 0.80) → REJECT as SPOOF
 ```
 
 **Liveness Confidence Scale:**
 ```
 1.0 = Definitely a live face
-0.85+ = Very confident it's live
-0.70 = Threshold (accept if ≥ this)
+0.90+ = Very confident it's live
+0.80 = Threshold (accept if ≥ this)
 0.50 = Uncertain
 0.0 = Likely spoofed/fake
 ```
@@ -570,15 +570,15 @@ Face detected at door:       [0.11, -0.33, 0.57, ...]
 
 Cosine Similarity = 0.92
 ↓
-0.92 > 0.60 threshold
+0.92 > 0.80 threshold
 ↓
 MATCH! It's John! ✓
 ```
 
 **Threshold Logic:**
 ```
-Similarity >= 0.60 → MATCH (it's the student)
-Similarity < 0.60  → NO MATCH (unknown person)
+Similarity >= 0.80 → MATCH (it's the student)
+Similarity < 0.80  → NO MATCH (unknown person)
 ```
 
 ### 3. Rearm Timer (Prevent Duplicates)
@@ -641,7 +641,7 @@ student_id  | Who came
 device_id   | Which device recorded
 ts          | Timestamp (when)
 method      | How (face/manual)
-confidence  | Match confidence (0.60-1.0)
+confidence  | Match confidence (0.80-1.0)
 synced      | Sync status
 ```
 
@@ -804,7 +804,7 @@ RESULT:
 2. **Check liveness** → Ensure face is real (not photo/screen/mask)
 3. **Store fingerprints** → In SQLite database (not images)
 4. **Compare faces** → Use cosine similarity (0 to 1)
-5. **Match if similar & live** → Similarity > 0.60 threshold AND liveness > 0.70
+5. **Match if similar & live** → Similarity > 0.80 threshold AND liveness > 0.80
 6. **Mark attendance** → Record in database with timestamp & liveness score
 7. **Export report** → Create Excel file for viewing
 

@@ -141,9 +141,9 @@ attendance (id, student_id, device_id, ts, confidence)
 
 ### Core Components
 
-- **Face Detection** - OpenCV Haar Cascade Classifier
+- **Face Detection** - InsightFace Model (`buffalo_l` pack) with OpenCV Cascade fallback
 - **Feature Extraction** - 512-dimensional face embeddings
-- **Matching Algorithm** - Cosine similarity (threshold: 0.60)
+- **Matching Algorithm** - Cosine similarity (threshold: 0.80)
 - **Database** - SQLite3 with offline storage
 - **Interface** - Command-line CLI
 
@@ -184,25 +184,35 @@ attendance (id, student_id, device_id, ts, confidence)
 
 ## ⚙️ Configuration
 
-Edit `.env` or `attend/config.py` to customize:
+Customization is done by setting environment variables or modifying [attend/config.py](file:///d:/Coding/cf/offline-face-attendance/attend/config.py):
 
-```python
-# Similarity threshold (lower = more strict)
-CONFIDENCE_THRESHOLD = 0.60
+### Core System Configuration
 
-# Liveness detection (anti-spoofing)
-ATTEND_LIVENESS = 1                    # Enable/disable liveness check
-ATTEND_LIVENESS_THRESHOLD = 0.70       # Liveness score threshold (0-1)
-ATTEND_LOG_LIVENESS = 1                # Log liveness check results
+| Env Variable | Config Field | Default | Description |
+|---|---|---|---|
+| `ATTEND_DB` | `DB_PATH` | `attendance.db` | Path to SQLite database file |
+| `ATTEND_MODEL` | `MODEL_NAME` | `buffalo_l` | InsightFace model name |
+| `ATTEND_SIM_THRESHOLD` | `SIM_THRESHOLD` | `0.80` | Cosine similarity threshold (higher = stricter matching) |
+| `ATTEND_REARM` | `REARM_SECONDS` | `15` | Rearm time in seconds (prevents duplicate marks) |
+| `ATTEND_CAM` | `CAMERA_INDEX` | `0` | Camera device index (0 = default webcam) |
+| `ATTEND_WIDTH` | `FRAME_WIDTH` | `1280` | Video frame width in pixels |
+| `ATTEND_HEIGHT` | `FRAME_HEIGHT` | `720` | Video frame height in pixels |
+| `ATTEND_LIVENESS` | `LIVENESS_ENABLED` | `1` (True) | Enable (1) or disable (0) liveness detection |
+| `ATTEND_LIVENESS_THRESHOLD`| `LIVENESS_THRESHOLD`| `0.8` | Liveness score threshold (higher = stricter spoof check) |
+| `ATTEND_LOG_LIVENESS` | `LOG_LIVENESS` | `1` (True) | Log liveness checking details to console |
 
-# Rearm timer (seconds - prevents duplicate marks)
-REARM_DURATION = 15
+### Face Quality Thresholds (during enrollment)
 
-# Camera settings
-CAMERA_INDEX = 0
-CAMERA_WIDTH = 1280
-CAMERA_HEIGHT = 720
-```
+| Env Variable | Config Field | Default | Description |
+|---|---|---|---|
+| `ATTEND_QUALITY_MIN_SIZE` | `QUALITY_MIN_FACE_SIZE` | `0.01` | Min face size (1% of frame area) |
+| `ATTEND_QUALITY_MIN_BLUR` | `QUALITY_MIN_BLUR_SCORE` | `20` | Min sharpness score (Laplacian variance) |
+| `ATTEND_QUALITY_MIN_BRIGHT` | `QUALITY_MIN_BRIGHTNESS` | `15` | Minimum brightness value (0-255) |
+| `ATTEND_QUALITY_MAX_BRIGHT` | `QUALITY_MAX_BRIGHTNESS` | `245` | Maximum brightness value (0-255) |
+| `ATTEND_QUALITY_MAX_YAW` | `QUALITY_MAX_YAW` | `40` | Max head yaw angle (left/right) in degrees |
+| `ATTEND_QUALITY_MAX_PITCH`| `QUALITY_MAX_PITCH` | `40` | Max head pitch angle (up/down) in degrees |
+| `ATTEND_QUALITY_MAX_ROLL` | `QUALITY_MAX_ROLL` | `30` | Max head roll angle (tilted side-to-side) |
+| `ATTEND_QUALITY_THRESHOLD` | `QUALITY_ACCEPT_THRESHOLD`| `0.20` | Overall quality score threshold to accept enrollment |
 
 ### Anti-Spoofing / Liveness Detection
 

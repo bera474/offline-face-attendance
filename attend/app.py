@@ -14,6 +14,7 @@ from .recognition import best_match
 from .attendance import mark_attendance, get_student_count_today
 from .camera import Camera
 from .config import CFG
+from .liveness import LivenessChecker
 from .utils import now_utc_iso
 
 
@@ -23,6 +24,7 @@ class AttendanceSystem:
         self.camera_index = camera_index
         self.embedder = Embedder()
         self.camera = Camera(camera_index)
+        self.liveness_checker = LivenessChecker()
         self.conn = None
         self.device_id = None
 
@@ -81,6 +83,10 @@ class AttendanceSystem:
         print(f"[system] Device ID: {self.device_id}")
         print(f"[system] Running attendance system. Press 'q' to quit.")
         print(f"[system] Threshold: {CFG.SIM_THRESHOLD}, Rearm: {CFG.REARM_SECONDS}s")
+        if CFG.LIVENESS_ENABLED:
+            print(f"[system] Liveness detection: ON (threshold: {CFG.LIVENESS_THRESHOLD})")
+        else:
+            print(f"[system] Liveness detection: OFF")
 
         try:
             while True:
@@ -98,7 +104,32 @@ class AttendanceSystem:
                     bbox = face["bbox"]
                     embedding = face["embedding"]
 
-                    # Proceed with matching
+                    x1, y1, x2, y2 = bbox
+
+                    # --- Liveness check (between detection and matching) ---
+                    liveness_score = 0.5
+                    if CFG.LIVENESS_ENABLED:
+                        liveness_result = self.liveness_checker.check(frame, bbox)
+                        liveness_score = liveness_result["score"]
+
+                        if not liveness_result["is_live"]:
+                            # SPOOF detected — draw red box + label, skip matching
+                            cv2.rectangle(disp, (x1, y1), (x2, y2), (0, 0, 255), 2)
+                            spoof_label = f"SPOOF ({liveness_score:.2f})"
+                            cv2.putText(
+                                disp,
+                                spoof_label,
+                                (x1, y1 - 10),
+                                cv2.FONT_HERSHEY_SIMPLEX,
+                                0.7,
+                                (0, 0, 255),
+                                2,
+                            )
+                            if CFG.LOG_LIVENESS:
+                                print(f"[spoof] Face rejected (score: {liveness_score:.3f})")
+                            continue  # Skip matching entirely
+
+                    # --- Proceed with matching ---
                     query_list = [(sid, name, vec) for sid, name, vec in self.enrolled_students]
                     if query_list:
                         best_id_tuple = best_match(embedding, query_list)
@@ -110,9 +141,18 @@ class AttendanceSystem:
                             color = (0, 255, 0)  # Green
 
                             if self._can_mark(best_id):
-                                mark_attendance(best_id, self.device_id, method="face", confidence=best_sim)
+                                mark_attendance(
+                                    best_id,
+                                    self.device_id,
+                                    method="face",
+                                    confidence=best_sim,
+                                    liveness_score=liveness_score,
+                                )
                                 if CFG.LOG_MATCHES:
-                                    print(f"[marked] {name} ({best_id}) @ {now_utc_iso()} (conf: {best_sim:.3f})")
+                                    print(
+                                        f"[marked] {name} ({best_id}) @ {now_utc_iso()} "
+                                        f"(conf: {best_sim:.3f}, live: {liveness_score:.2f})"
+                                    )
                         else:
                             # No match
                             name = "Unknown"
@@ -120,7 +160,6 @@ class AttendanceSystem:
                             best_sim = 0.0
 
                         # Draw bounding box
-                        x1, y1, x2, y2 = bbox
                         cv2.rectangle(disp, (x1, y1), (x2, y2), color, 2)
 
                         # Draw label
