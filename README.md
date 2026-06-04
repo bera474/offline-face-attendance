@@ -197,9 +197,12 @@ Customization is done by setting environment variables or modifying [attend/conf
 | `ATTEND_CAM` | `CAMERA_INDEX` | `0` | Camera device index (0 = default webcam) |
 | `ATTEND_WIDTH` | `FRAME_WIDTH` | `1280` | Video frame width in pixels |
 | `ATTEND_HEIGHT` | `FRAME_HEIGHT` | `720` | Video frame height in pixels |
-| `ATTEND_LIVENESS` | `LIVENESS_ENABLED` | `1` (True) | Enable (1) or disable (0) liveness detection |
+| `ATTEND_LIVENESS` | `LIVENESS_ENABLED` | `1` (True) | Enable (1) or disable (0) passive liveness detection |
 | `ATTEND_LIVENESS_THRESHOLD`| `LIVENESS_THRESHOLD`| `0.8` | Liveness score threshold (higher = stricter spoof check) |
 | `ATTEND_LOG_LIVENESS` | `LOG_LIVENESS` | `1` (True) | Log liveness checking details to console |
+| `ATTEND_ACTIVE_LIVENESS` | `ACTIVE_LIVENESS_ENABLED` | `1` (True) | Enable (1) or disable (0) active head-rotation challenge |
+| `ATTEND_ACTIVE_TIMEOUT` | `ACTIVE_LIVENESS_TIMEOUT` | `15.0` | Challenge phase completion time limit in seconds |
+| `ATTEND_ACTIVE_YAW_THRESHOLD` | `ACTIVE_LIVENESS_YAW_THRESHOLD` | `12.0` | Head turn angle threshold in degrees for challenge |
 
 ### Face Quality Thresholds (during enrollment)
 
@@ -214,9 +217,12 @@ Customization is done by setting environment variables or modifying [attend/conf
 | `ATTEND_QUALITY_MAX_ROLL` | `QUALITY_MAX_ROLL` | `30` | Max head roll angle (tilted side-to-side) |
 | `ATTEND_QUALITY_THRESHOLD` | `QUALITY_ACCEPT_THRESHOLD`| `0.20` | Overall quality score threshold to accept enrollment |
 
-### Anti-Spoofing / Liveness Detection
+### Anti-Spoofing & Liveness Detection
 
 The system includes **liveness detection** to prevent spoofing attacks:
+
+- **Passive Liveness**: Runs dual MiniFASNet ONNX models (V2 and V1SE) on BGR crops to classify flat textures, screen glare, and moiré patterns.
+- **Active Liveness (Challenge-Response)**: Prompts the recognized student to rotate their head left/right, verifies rotation using 5 keypoints in 3D perspective projection, and requires them to look back straight. This defeats high-quality screen displays.
 
 - ✅ Detects **printed photos** of students
 - ✅ Detects **screen replays** (e.g., showing phone/laptop screen)

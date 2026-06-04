@@ -55,6 +55,7 @@ class Embedder:
                     "bbox": bbox,
                     "kps": f.kps,
                     "embedding": f.embedding.astype(np.float32),
+                    "landmark_3d_68": f.landmark_3d_68 if hasattr(f, "landmark_3d_68") else None,
                 })
             return out
         except Exception as e:
@@ -80,6 +81,7 @@ class Embedder:
                                [x+w/2, y+h/2], [x+w/4, y+3*h/4],
                                [x+3*w/4, y+3*h/4]], dtype=np.float32),
                 "embedding": embedding,
+                "landmark_3d_68": None,
             })
         return out
 

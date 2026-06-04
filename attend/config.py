@@ -37,11 +37,17 @@ class Config:
     # Packs
     PACK_MODEL_TAG: str = "insightface_512d"
 
-    # Liveness / Anti-Spoofing
+    # Liveness / Anti-Spoofing (Passive)
     LIVENESS_ENABLED: bool = os.environ.get("ATTEND_LIVENESS", "1") == "1"
     LIVENESS_THRESHOLD: float = float(os.environ.get("ATTEND_LIVENESS_THRESHOLD", "0.8"))
     LIVENESS_MODEL_PATH: str = os.environ.get("ATTEND_LIVENESS_MODEL", "")  # auto-resolved
     LOG_LIVENESS: bool = os.environ.get("ATTEND_LOG_LIVENESS", "1") == "1"
+
+    # Active Liveness (Challenge-Response)
+    ACTIVE_LIVENESS_ENABLED: bool = os.environ.get("ATTEND_ACTIVE_LIVENESS", "1") == "1"
+    ACTIVE_LIVENESS_TIMEOUT: float = float(os.environ.get("ATTEND_ACTIVE_TIMEOUT", "15.0"))
+    ACTIVE_LIVENESS_YAW_THRESHOLD: float = float(os.environ.get("ATTEND_ACTIVE_YAW_THRESHOLD", "12.0"))
+    ACTIVE_LIVENESS_BLINK_THRESHOLD: float = float(os.environ.get("ATTEND_ACTIVE_BLINK_THRESHOLD", "0.15"))
 
 
 CFG = Config()

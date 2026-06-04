@@ -147,14 +147,19 @@ python main.py run
 ```
 
 **What happens:**
-1. Webcam opens showing live video
-2. Students come in front of camera
-3. System recognizes them automatically
-4. Shows "✓ Name (confidence)" in green box
-5. Attendance is marked
-6. Press **Q** to stop
+1. Webcam opens showing live video with a semi-transparent banner at the top.
+2. Students step in front of the camera.
+3. Once a face is recognized, the **Active Liveness Challenge** starts:
+   * **Stage 1 (Head Turn)**: The camera frame highlights their face in **Orange** and shows an on-screen prompt: `"TURN LEFT ←"` or `"TURN RIGHT →"`. An orange progress bar at the top displays the time remaining for this phase (15 seconds limit).
+4. The student rotates their head to the prompted side.
+5. **Stage 2 (Blink)**: Once the rotation is detected, the timer resets and the prompt updates to `"LOOK STRAIGHT & BLINK"` (face highlighted in **Cyan** with a cyan progress bar showing 15 seconds remaining).
+6. The student looks back straight and blinks. Once the blink is detected, the system records attendance with `method="face-active"`, shows their name in a **Green** box, and the student is marked present.
+7. Press **Q** to stop.
 
-**Counter shows:** "Present Today: 5" (number of students)
+**Key Mechanics:**
+* **Rearm timer**: Prevents marking the same student multiple times within 15 seconds.
+* **Queued challenges**: If multiple faces are detected, the system focuses on one active challenge at a time, labeling other faces as `"Waiting..."`.
+* **Timeout reset**: If the active student walks away or does not complete a phase in time, the challenge resets after 15 seconds to avoid blocking the queue.
 
 ---
 
@@ -280,6 +285,19 @@ set ATTEND_LIVENESS_THRESHOLD=0.60 && python main.py run
 ATTEND_LIVENESS_THRESHOLD=0.60 python main.py run
 ```
 (Lower = more lenient, Higher = more strict. Default is 0.80)
+
+### Problem: Head rotation & blink challenge (Active Liveness) is slow or gets stuck
+**Solution:** You can increase the timeout limit, disable the challenge (falling back to passive ONNX liveness), or disable liveness checks entirely:
+```bash
+# Increase timeout limit to 20 seconds (default is 15.0 per phase)
+set ATTEND_ACTIVE_TIMEOUT=20.0 && python main.py run
+
+# Disable active challenge only (runs passive liveness check)
+set ATTEND_ACTIVE_LIVENESS=0 && python main.py run
+
+# Disable all liveness checks (passive + active)
+set ATTEND_ACTIVE_LIVENESS=0 && set ATTEND_LIVENESS=0 && python main.py run
+```
 
 ---
 
